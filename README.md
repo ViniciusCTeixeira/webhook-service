@@ -93,10 +93,6 @@ Contributions are welcome! Please feel free to submit a Pull Request or open an 
 
 This project is licensed under the MIT License.
 
-## Author
-
-Vinicius da Conceição Teixeira - [vinicius@teclysi.com](mailto:vinicius@teclysi.com)
-
 ---
 
 This README provides an overview of the project, instructions for setting up and running the service, and guidance on how to use it effectively. Let me know if you need further adjustments or additional information!
