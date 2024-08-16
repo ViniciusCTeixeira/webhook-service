@@ -52,6 +52,13 @@ app.all('/webhook', (req, res) => {
     res.status(200).send({success: true, msg: 'Webhook recebido'});
 });
 
+// Rota para limpar as requisições
+app.post('/clear', (req, res) => {
+    requests = [];
+    io.emit('clearRequests'); // Notifica os clientes conectados via WebSocket para limpar a tabela
+    res.status(200).send({success: true, msg: 'Requisições limpas'});
+});
+
 // Inicia o servidor
 server.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);

@@ -23,10 +23,17 @@
         th {
             background-color: #f2f2f2;
         }
+        button {
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 <h1>Webhook Requests</h1>
+<button id="clearButton">Limpar Dados</button>
 <table id="requestsTable">
     <tr>
         <th>Timestamp</th>
@@ -50,9 +57,10 @@
 <script>
     const socket = io();
 
+    // Escuta novos eventos de requisição e atualiza a tabela
     socket.on('newRequest', (request) => {
         const table = document.getElementById('requestsTable');
-        const newRow = table.insertRow(1); // Insere uma nova linha no topo da tabela
+        const newRow = table.insertRow(1);
 
         const timestampCell = newRow.insertCell(0);
         const methodCell = newRow.insertCell(1);
@@ -65,6 +73,25 @@
         pathCell.textContent = request.path;
         headersCell.innerHTML = `<pre>${JSON.stringify(request.headers, null, 2)}</pre>`;
         bodyCell.innerHTML = `<pre>${JSON.stringify(request.body, null, 2)}</pre>`;
+    });
+
+    // Escuta o evento de limpar requisições e limpa a tabela
+    socket.on('clearRequests', () => {
+        const table = document.getElementById('requestsTable');
+        // Mantém apenas o cabeçalho da tabela
+        while (table.rows.length > 1) {
+            table.deleteRow(1);
+        }
+    });
+
+    // Função para limpar os dados via POST request
+    document.getElementById('clearButton').addEventListener('click', () => {
+        fetch('/clear', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.msg);
+            })
+            .catch(error => console.error('Erro ao limpar dados:', error));
     });
 </script>
 </body>
