@@ -15,8 +15,8 @@ const io = new Server(server);
 let requests = [];
 
 // Configura o body-parser para receber JSON e dados URL-encoded
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({limit : '100mb', extended : true}));
+app.use(bodyParser.urlencoded({limit : '100mb', extended : true}));
 
 // Configura o EJS como mecanismo de visualização
 app.set('view engine', 'ejs');
