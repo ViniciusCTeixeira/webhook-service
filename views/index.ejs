@@ -60,7 +60,7 @@
     // Escuta novos eventos de requisição e atualiza a tabela
     socket.on('newRequest', (request) => {
         const table = document.getElementById('requestsTable');
-        const newRow = table.insertRow(1);
+        const newRow = table.insertRow(-1);
 
         const timestampCell = newRow.insertCell(0);
         const methodCell = newRow.insertCell(1);
