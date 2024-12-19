@@ -62,4 +62,5 @@ app.post('/clear', (req, res) => {
 // Inicia o servidor
 server.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
+    console.log(`Os eventos devem ser enviados para http://localhost:${port}/webhook`);
 });
