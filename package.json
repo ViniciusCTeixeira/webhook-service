@@ -1,8 +1,11 @@
 {
   "name": "webhook-service",
   "version": "1.0.0",
+  "description": "Lightweight Node.js application for capturing and displaying HTTP requests (webhooks)",
   "main": "server.js",
+  "author": "Vinicius Teixeira",
   "license": "MIT",
+  "private": false,
   "scripts": {
     "start": "node server.js"
   },
