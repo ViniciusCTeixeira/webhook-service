@@ -15,7 +15,7 @@ Webhook Service is a lightweight Node.js application designed to capture and dis
 Before you begin, ensure you have met the following requirements:
 
 - Node.js (version 12.x or higher)
-- npm (version 6.x or higher)
+- yarn (version 1.x or higher)
 
 ## Installation
 
@@ -29,7 +29,7 @@ Before you begin, ensure you have met the following requirements:
 2. Install the dependencies:
 
    ```bash
-   npm install
+   yarn install
    ```
 
 ## Usage
@@ -37,7 +37,7 @@ Before you begin, ensure you have met the following requirements:
 1. Start the application:
 
    ```bash
-   npm start
+   yarn start
    ```
 
 2. Open your browser and navigate to:
