@@ -68,16 +68,6 @@ Before you begin, ensure you have met the following requirements:
 
 This service uses WebSocket to provide real-time updates on the web interface. When a new request is received, all connected clients will see the new request added to the list without needing to refresh the page.
 
-## Project Structure
-
-```plaintext
-webhook-service/
-├── server.js         # Main server file
-├── package.json      # Project metadata and dependencies
-└── views/
-    └── index.ejs     # HTML template for displaying requests
-```
-
 ## Customization
 
 You can customize the following aspects of the service:
