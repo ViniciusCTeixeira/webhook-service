@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Webhook Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/css/bootstrap/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-fluid">
+    <h1 class="mb-4">Webhook Requests</h1>
+    <button id="clearButton" class="btn btn-danger mb-3">Limpar Dados</button>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped" id="requestsTable">
+            <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Método</th>
+                <th>Path</th>
+                <th>Headers</th>
+                <th>Body</th>
+            </tr>
+            </thead>
+            <tbody>
+            <% requests.forEach(req => { %>
+                <tr>
+                    <td><%= req.timestamp %></td>
+                    <td><%= req.method %></td>
+                    <td><%= req.path %></td>
+                    <td><pre><%= JSON.stringify(req.headers, null, 2) %></pre></td>
+                    <td><pre><%= JSON.stringify(req.body, null, 2) %></pre></td>
+                </tr>
+            <% }) %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="/js/jquery/jquery.min.js"></script>
+<script src="/js/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+
+    socket.on('newRequest', (request) => {
+        const newRow = `
+        <tr>
+          <td>${request.timestamp}</td>
+          <td>${request.method}</td>
+          <td>${request.path}</td>
+          <td><pre>${JSON.stringify(request.headers, null, 2)}</pre></td>
+          <td><pre>${JSON.stringify(request.body, null, 2)}</pre></td>
+        </tr>`;
+        $('#requestsTable tbody').append(newRow);
+    });
+
+    socket.on('clearRequests', () => {
+        $('#requestsTable tbody').empty();
+    });
+
+    $('#clearButton').on('click', () => {
+        fetch('/clear', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => console.log(data.msg))
+            .catch(err => console.error('Erro ao limpar dados:', err));
+    });
+</script>
+</body>
+</html>

@@ -1,65 +1,57 @@
+require("dotenv").config();
 const express = require('express');
-const bodyParser = require('body-parser');
 const http = require('http');
 const { Server } = require('socket.io');
-
-const app = express();
-const port = process.env.PORT || 3000;
+const ip = require("ip");
+const appConfig = require('./configs/AppConfig');
+const {join} = require("node:path");
 
 // Cria o servidor HTTP e o integra com o socket.io
-const server = http.createServer(app);
-const io = new Server(server);
+global.app = express();
+global.server = http.createServer(app);
+global.io = new Server(server);
 
-// Armazena as requisições em memória
-let requests = [];
+//Set tools
+global.logs = require('./configs/LogsConfig');
+global.tools = require('./src/Helpers/ToolsHelper');
+global.WWW_ROOT = __dirname;
 
-// Configura o body-parser para receber JSON e dados URL-encoded
-app.use(bodyParser.json({limit : '100mb', extended : true}));
-app.use(bodyParser.urlencoded({limit : '100mb', extended : true}));
+global.requests = []
 
-// Configura o EJS como mecanismo de visualização
-app.set('view engine', 'ejs');
+//Set extra configs
+appConfig.setup();
 
-// Rota principal para visualizar as requisições
-app.get('/', (req, res) => {
-    res.render('index', { requests });
+//Set port listen
+server.listen(process.env.PORT, async () => {
+    logs.info(`Aplicação iniciada na porta ${process.env.PORT}`);
+    logs.info(`Servidor rodando em ${process.env.NODE_ENV}`);
+    logs.info(`Servidor rodando em ${ip.address()}`);
 });
 
-// Rota para receber as requisições do webhook
-app.all('/webhook', (req, res) => {
-    // Armazena as informações da requisição
-    const requestDetails = {
-        method: req.method,
-        headers: req.headers,
-        body: req.body,
-        query: req.query,
-        params: req.params,
-        path: req.path,
-        timestamp: new Date().toISOString()
-    };
+//Load routes
+require('./src/Routes/index')();
 
-    requests.push(requestDetails);
+// Tratamento para encerramento do sistema
+process.on('beforeExit', code => {
+    logs.info('beforeExit | Process will exit with code: %i ', code);
+})
 
-    // Limita o número de requisições armazenadas para evitar estouro de memória
-    if (requests.length > 100) {
-        requests.shift();
-    }
-
-    // Emite um evento para todos os clientes conectados via WebSocket
-    io.emit('newRequest', requestDetails);
-
-    res.status(200).send({success: true, msg: 'Webhook recebido'});
+process.on('exit', code => {
+    logs.info('exit | call to process exit: %i ', code);
 });
 
-// Rota para limpar as requisições
-app.post('/clear', (req, res) => {
-    requests = [];
-    io.emit('clearRequests'); // Notifica os clientes conectados via WebSocket para limpar a tabela
-    res.status(200).send({success: true, msg: 'Requisições limpas'});
-});
+process.on('SIGTERM', signal => {
+    logs.info(`SIGTERM | Process ${process.pid} received a SIGTERM signal`);
+    process.exit(2)
+})
 
-// Inicia o servidor
-server.listen(port, () => {
-    console.log(`Servidor rodando em http://localhost:${port}`);
-    console.log(`Os eventos devem ser enviados para http://localhost:${port}/webhook`);
+process.on('SIGINT', signal => {
+    logs.info(`SIGINT | Process ${process.pid} has been interrupted`);
+    process.exit(3)
+})
+
+process.on('uncaughtExceptionMonitor', (err, origin) => {
+    logs.error('uncaughtExceptionMonitor -> err: %s', err);
+    logs.error('uncaughtExceptionMonitor -> origin: %i', origin);
+    process.exit(4)
 });
