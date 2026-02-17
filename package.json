@@ -5,7 +5,6 @@
   "main": "server.js",
   "author": "Vinicius Teixeira",
   "license": "MIT",
-  "private": false,
   "scripts": {
     "start": "node server.js"
   },

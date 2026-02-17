@@ -1,70 +1,1210 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Webhook Viewer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="/css/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <title>Webhook Inspector</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f3f5f7;
+            --panel: #ffffff;
+            --line: #d8dde4;
+            --line-soft: #e8ecf0;
+            --text: #1f2937;
+            --muted: #5c6470;
+            --dark: #1e232b;
+            --dark-alt: #2a313b;
+            --accent: #1783d1;
+            --accent-soft: #e8f3fb;
+            --ok: #36a852;
+            --danger: #d94c45;
+            --shadow: 0 10px 28px rgba(16, 24, 40, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            font-family: "Source Sans 3", "Trebuchet MS", sans-serif;
+            background: radial-gradient(circle at top left, #f8fbff 0, #f3f5f7 38%, #eef1f5 100%);
+            color: var(--text);
+        }
+
+        .app-shell {
+            height: 100%;
+            display: grid;
+            grid-template-rows: auto auto 1fr;
+            animation: show-shell 220ms ease-out;
+        }
+
+        .topbar {
+            background: linear-gradient(180deg, #2a313b 0%, #1e232b 100%);
+            color: #f9fafb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid #3d4450;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+        }
+
+        .brand-mark {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #f9fafb;
+            color: #1e232b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .menu-links {
+            display: flex;
+            gap: 14px;
+            font-size: 14px;
+            color: #d1d6dd;
+        }
+
+        .menu-links span {
+            cursor: default;
+        }
+
+        .toolbar {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--line);
+            background: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .endpoint {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f6f8fb;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            padding: 8px 10px;
+            min-width: min(100%, 580px);
+        }
+
+        .endpoint strong {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .endpoint code {
+            font-family: "JetBrains Mono", "Consolas", monospace;
+            font-size: 13px;
+            color: #1f2937;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn {
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #fff;
+            color: var(--text);
+            transition: 120ms ease;
+        }
+
+        .btn:hover {
+            border-color: #bcc6d1;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: #1274bc;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: #fff;
+            border-color: #efc0be;
+            color: var(--danger);
+        }
+
+        .workspace {
+            min-height: 0;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .requests-panel {
+            border-right: 1px solid var(--line);
+            background: var(--panel);
+            display: grid;
+            grid-template-rows: auto auto 1fr;
+            min-height: 0;
+        }
+
+        .requests-header {
+            padding: 14px 14px 8px;
+            border-bottom: 1px solid var(--line-soft);
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .requests-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            color: #344054;
+        }
+
+        .requests-count {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .search-row {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--line-soft);
+        }
+
+        .search-row input {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 7px;
+            border: 1px solid var(--line);
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .search-row input:focus {
+            border-color: #8ab7df;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(23, 131, 209, 0.12);
+        }
+
+        .requests-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            overflow: auto;
+        }
+
+        .request-item {
+            padding: 11px 12px;
+            border-bottom: 1px solid var(--line-soft);
+            cursor: pointer;
+            background: #fff;
+            transition: background-color 120ms ease;
+        }
+
+        .request-item:hover {
+            background: #f7fafc;
+        }
+
+        .request-item.active {
+            background: var(--accent-soft);
+            border-left: 3px solid var(--accent);
+            padding-left: 9px;
+        }
+
+        .request-item-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .request-item-main {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .request-path {
+            font-weight: 600;
+            color: #2b3748;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .request-remove {
+            border: 1px solid #d6dde6;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #748297;
+            width: 24px;
+            height: 24px;
+            line-height: 1;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            opacity: 0;
+            transition: 120ms ease;
+            flex-shrink: 0;
+        }
+
+        .request-item:hover .request-remove,
+        .request-item.active .request-remove {
+            opacity: 1;
+        }
+
+        .request-remove:hover {
+            border-color: #e3b9b6;
+            color: #c0392b;
+            background: #fff7f7;
+        }
+
+        .request-remove:focus-visible {
+            outline: 2px solid #86b7fe;
+            outline-offset: 1px;
+            opacity: 1;
+        }
+
+        .request-meta {
+            color: #677283;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .badge {
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            line-height: 1.2;
+            color: #fff;
+            letter-spacing: 0.2px;
+        }
+
+        .badge-get {
+            background: #43af5b;
+        }
+
+        .badge-post {
+            background: #1880d6;
+        }
+
+        .badge-put,
+        .badge-patch {
+            background: #cb8c20;
+        }
+
+        .badge-delete {
+            background: #d34f48;
+        }
+
+        .badge-default {
+            background: #788395;
+        }
+
+        .details-panel {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .details-header {
+            background: #fff;
+            border-bottom: 1px solid var(--line);
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .details-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .details-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #344054;
+        }
+
+        .details-subtitle {
+            font-size: 12px;
+            color: #677283;
+        }
+
+        .details-content {
+            overflow: auto;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(280px, 1fr));
+            gap: 12px;
+            align-content: start;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .card.wide {
+            grid-column: 1 / -1;
+        }
+
+        .card-header {
+            background: #f8fafc;
+            border-bottom: 1px solid var(--line-soft);
+            padding: 9px 12px;
+            font-weight: 700;
+            font-size: 13px;
+            color: #364152;
+            letter-spacing: 0.2px;
+        }
+
+        .card-header-tabs {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .card-body {
+            padding: 10px 12px;
+            font-size: 13px;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 90px 1fr;
+            gap: 8px;
+            align-items: start;
+        }
+
+        .meta-grid dt {
+            color: var(--muted);
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .meta-grid dd {
+            margin: 0;
+            color: #293445;
+            word-break: break-word;
+        }
+
+        .key-value-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            font-family: "JetBrains Mono", "Consolas", monospace;
+            font-size: 12px;
+        }
+
+        .key-value-list li {
+            padding: 6px 0;
+            border-bottom: 1px solid var(--line-soft);
+            display: grid;
+            grid-template-columns: minmax(120px, 180px) 1fr;
+            gap: 10px;
+        }
+
+        .key-value-list li:last-child {
+            border-bottom: none;
+        }
+
+        .key-name {
+            color: #566070;
+        }
+
+        .key-value {
+            color: #1f2937;
+            word-break: break-word;
+        }
+
+        pre {
+            margin: 0;
+            background: #1f2937;
+            color: #e5edf8;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 340px;
+            overflow: auto;
+            font-family: "JetBrains Mono", "Consolas", monospace;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        #bodyPreview {
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            max-height: 70vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #64748b;
+            min-height: 220px;
+            font-size: 15px;
+            padding: 24px;
+        }
+
+        .empty-state[hidden] {
+            display: none !important;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            border: 1px solid #c9d9e8;
+            background: #f7fbff;
+            color: #356791;
+            font-weight: 600;
+        }
+
+        .action-btn {
+            border: 1px solid #c8d3df;
+            background: #ffffff;
+            color: #415168;
+            border-radius: 7px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 120ms ease;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            border-color: #99b0c7;
+            color: #1f354e;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .view-tabs {
+            display: inline-flex;
+            gap: 4px;
+            background: #eef2f7;
+            border: 1px solid #d9e1ea;
+            border-radius: 7px;
+            padding: 2px;
+        }
+
+        .view-tab {
+            border: none;
+            background: transparent;
+            color: #5f6c7c;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 8px;
+            cursor: pointer;
+            min-width: 52px;
+        }
+
+        .view-tab:hover {
+            color: #2e3f55;
+        }
+
+        .view-tab.is-active {
+            background: #ffffff;
+            color: #1d2a3b;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+        }
+
+        .toast {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            background: #1e232b;
+            color: #fff;
+            font-size: 13px;
+            padding: 10px 13px;
+            border-radius: 8px;
+            opacity: 0;
+            pointer-events: none;
+            transition: 200ms ease;
+        }
+
+        .toast.visible {
+            opacity: 1;
+            transform: translateY(-4px);
+        }
+
+        @keyframes show-shell {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 1080px) {
+            .workspace {
+                grid-template-columns: 280px 1fr;
+            }
+
+            .details-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 860px) {
+            .workspace {
+                grid-template-columns: 1fr;
+                grid-template-rows: 44vh 1fr;
+            }
+
+            .requests-panel {
+                border-right: none;
+                border-bottom: 1px solid var(--line);
+            }
+        }
+
+        @media (max-width: 580px) {
+            .topbar {
+                padding: 10px 12px;
+            }
+
+            .brand {
+                font-size: 18px;
+            }
+
+            .menu-links {
+                display: none;
+            }
+
+            .toolbar {
+                padding: 8px 10px;
+            }
+
+            .endpoint {
+                min-width: 100%;
+            }
+
+            .details-header-right {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="container-fluid">
-    <h1 class="mb-4">Webhook Requests</h1>
-    <button id="clearButton" class="btn btn-danger mb-3">Limpar Dados</button>
+<div class="app-shell">
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-mark">W</span>
+            <span>Webhook.site</span>
+        </div>
+        <div class="menu-links">
+            <span>Docs & API</span>
+            <span>Custom Actions</span>
+            <span>Support</span>
+        </div>
+    </header>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped" id="requestsTable">
-            <thead>
-            <tr>
-                <th>Timestamp</th>
-                <th>Método</th>
-                <th>Path</th>
-                <th>Headers</th>
-                <th>Body</th>
-            </tr>
-            </thead>
-            <tbody>
-            <% requests.forEach(req => { %>
-                <tr>
-                    <td><%= req.timestamp %></td>
-                    <td><%= req.method %></td>
-                    <td><%= req.path %></td>
-                    <td><pre><%= JSON.stringify(req.headers, null, 2) %></pre></td>
-                    <td><pre><%= JSON.stringify(req.body, null, 2) %></pre></td>
-                </tr>
-            <% }) %>
-            </tbody>
-        </table>
+    <div class="toolbar">
+        <div class="endpoint" title="Webhook endpoint URL">
+            <strong>URL</strong>
+            <code id="webhookUrl"></code>
+            <button class="btn" id="copyUrlButton" type="button">Copy</button>
+        </div>
+        <div>
+            <button class="btn btn-danger" id="clearButton" type="button">Clear Requests</button>
+        </div>
     </div>
+
+    <main class="workspace">
+        <aside class="requests-panel">
+            <div class="requests-header">
+                <div class="requests-title">REQUESTS</div>
+                <div class="requests-count" id="requestsCount">0</div>
+            </div>
+            <div class="search-row">
+                <input type="text" id="searchInput" placeholder="Filter by method, path, or IP">
+            </div>
+            <ul class="requests-list" id="requestsList"></ul>
+        </aside>
+
+        <section class="details-panel">
+            <div class="details-header">
+                <div>
+                    <div class="details-title">Request Details</div>
+                    <div class="details-subtitle" id="detailDate">No request selected</div>
+                </div>
+                <div class="details-header-right">
+                    <button class="action-btn" id="copyRequestJsonButton" type="button" disabled>Copy JSON</button>
+                    <button class="action-btn" id="copyCurlButton" type="button" disabled>Copy cURL</button>
+                    <div class="pill" id="activeMethod">Waiting</div>
+                </div>
+            </div>
+
+            <div class="details-content" id="detailsContent">
+                <div class="empty-state wide" id="emptyState">Waiting for first request</div>
+
+                <article class="card" id="overviewCard" hidden>
+                    <div class="card-header">Request Details</div>
+                    <div class="card-body">
+                        <dl class="meta-grid">
+                            <dt>Method</dt>
+                            <dd id="metaMethod">-</dd>
+                            <dt>Path</dt>
+                            <dd id="metaPath">-</dd>
+                            <dt>IP</dt>
+                            <dd id="metaIp">-</dd>
+                            <dt>Date</dt>
+                            <dd id="metaTimestamp">-</dd>
+                            <dt>Body Size</dt>
+                            <dd id="metaBodySize">-</dd>
+                        </dl>
+                    </div>
+                </article>
+
+                <article class="card" id="queryCard" hidden>
+                    <div class="card-header">Query strings</div>
+                    <div class="card-body">
+                        <ul class="key-value-list" id="queryList"></ul>
+                    </div>
+                </article>
+
+                <article class="card wide" id="headersCard" hidden>
+                    <div class="card-header">Request Headers</div>
+                    <div class="card-body">
+                        <ul class="key-value-list" id="headersList"></ul>
+                    </div>
+                </article>
+
+                <article class="card wide" id="bodyCard" hidden>
+                    <div class="card-header card-header-tabs">
+                        <span>Request Content</span>
+                        <div class="view-tabs" role="tablist" aria-label="Body view">
+                            <button class="view-tab is-active" type="button" data-body-view="json">JSON</button>
+                            <button class="view-tab" type="button" data-body-view="raw">Raw</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <pre id="bodyPreview">{}</pre>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
 </div>
 
-<script src="/js/jquery/jquery.min.js"></script>
-<script src="/js/bootstrap/bootstrap.bundle.min.js"></script>
+<div class="toast" id="toast"></div>
+
+<script id="initialData" type="application/json"><%- JSON.stringify(requests || []).replace(/</g, '\\u003c') %></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
     const socket = io();
+    const state = {
+        requests: [],
+        filteredIndexes: [],
+        selectedIndex: -1,
+        filter: '',
+        bodyView: 'json'
+    };
 
-    socket.on('newRequest', (request) => {
-        const newRow = `
-        <tr>
-          <td>${request.timestamp}</td>
-          <td>${request.method}</td>
-          <td>${request.path}</td>
-          <td><pre>${JSON.stringify(request.headers, null, 2)}</pre></td>
-          <td><pre>${JSON.stringify(request.body, null, 2)}</pre></td>
-        </tr>`;
-        $('#requestsTable tbody').append(newRow);
-    });
+    const listEl = document.getElementById('requestsList');
+    const requestsCountEl = document.getElementById('requestsCount');
+    const searchInputEl = document.getElementById('searchInput');
+    const webhookUrlEl = document.getElementById('webhookUrl');
+    const activeMethodEl = document.getElementById('activeMethod');
+    const detailDateEl = document.getElementById('detailDate');
+    const emptyStateEl = document.getElementById('emptyState');
+    const overviewCardEl = document.getElementById('overviewCard');
+    const queryCardEl = document.getElementById('queryCard');
+    const headersCardEl = document.getElementById('headersCard');
+    const bodyCardEl = document.getElementById('bodyCard');
+    const copyRequestJsonButtonEl = document.getElementById('copyRequestJsonButton');
+    const copyCurlButtonEl = document.getElementById('copyCurlButton');
+    const bodyViewTabs = Array.from(document.querySelectorAll('[data-body-view]'));
 
-    socket.on('clearRequests', () => {
-        $('#requestsTable tbody').empty();
-    });
+    const metaMethodEl = document.getElementById('metaMethod');
+    const metaPathEl = document.getElementById('metaPath');
+    const metaIpEl = document.getElementById('metaIp');
+    const metaTimestampEl = document.getElementById('metaTimestamp');
+    const metaBodySizeEl = document.getElementById('metaBodySize');
+    const queryListEl = document.getElementById('queryList');
+    const headersListEl = document.getElementById('headersList');
+    const bodyPreviewEl = document.getElementById('bodyPreview');
 
-    $('#clearButton').on('click', () => {
-        fetch('/clear', { method: 'POST' })
-            .then(res => res.json())
-            .then(data => console.log(data.msg))
-            .catch(err => console.error('Erro ao limpar dados:', err));
-    });
+    webhookUrlEl.textContent = `${window.location.origin}/webhook`;
+
+    function parseInitialRequests() {
+        try {
+            const content = document.getElementById('initialData').textContent;
+            const parsed = JSON.parse(content);
+            if (Array.isArray(parsed)) {
+                return parsed.slice().reverse();
+            }
+            return [];
+        } catch (error) {
+            console.error('Failed to parse initial data:', error);
+            return [];
+        }
+    }
+
+    function formatMethodClass(method) {
+        const normalized = String(method || '').toLowerCase();
+        if (normalized === 'get') return 'badge-get';
+        if (normalized === 'post') return 'badge-post';
+        if (normalized === 'put' || normalized === 'patch') return 'badge-put';
+        if (normalized === 'delete') return 'badge-delete';
+        return 'badge-default';
+    }
+
+    function localDate(dateText) {
+        const date = new Date(dateText);
+        if (Number.isNaN(date.getTime())) return '-';
+        return date.toLocaleString('en-US');
+    }
+
+    function stringifyValue(value) {
+        if (value === null || value === undefined) return '(empty)';
+        if (typeof value === 'string') return value || '(empty)';
+        if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+        try {
+            return JSON.stringify(value);
+        } catch (error) {
+            return '[unserializable]';
+        }
+    }
+
+    function formatBodyRaw(body) {
+        if (body === undefined || body === null) return '(empty)';
+        if (typeof body === 'string') {
+            if (!body.trim()) return '(empty)';
+            return body;
+        }
+        try {
+            return JSON.stringify(body);
+        } catch (error) {
+            return '[invalid body]';
+        }
+    }
+
+    function parseBodyAsJson(body) {
+        if (body === undefined || body === null) return null;
+        if (typeof body === 'string') {
+            if (!body.trim()) return null;
+            try {
+                return JSON.parse(body);
+            } catch (error) {
+                return null;
+            }
+        }
+        if (typeof body === 'object') return body;
+        return null;
+    }
+
+    function formatBodyJson(body) {
+        const parsed = parseBodyAsJson(body);
+        if (parsed === null) return '[body is not valid JSON]';
+        try {
+            return JSON.stringify(parsed, null, 2);
+        } catch (error) {
+            return '[invalid json body]';
+        }
+    }
+
+    function bodySize(body) {
+        const text = formatBodyRaw(body);
+        if (text === '(empty)' || text === '[invalid body]') return '0 B';
+        return `${new TextEncoder().encode(text).length} bytes`;
+    }
+
+    function normalizeRequest(request) {
+        const headers = request && typeof request.headers === 'object' && request.headers !== null ? request.headers : {};
+        const query = request && typeof request.query === 'object' && request.query !== null ? request.query : {};
+        const ip = headers['x-forwarded-for'] || headers['cf-connecting-ip'] || request.ip || '-';
+
+        return {
+            method: request.method || 'UNKNOWN',
+            path: request.path || '/',
+            headers,
+            body: request.body,
+            query,
+            timestamp: request.timestamp || new Date().toISOString(),
+            ip
+        };
+    }
+
+    function getSelectedRequest() {
+        return state.requests[state.selectedIndex] || null;
+    }
+
+    function escapeForDoubleQuotes(text) {
+        return String(text)
+            .replace(/\\/g, '\\\\')
+            .replace(/"/g, '\\"')
+            .replace(/\r?\n/g, '\\n');
+    }
+
+    function buildRequestUrl(request) {
+        const url = new URL(request.path || '/', window.location.origin);
+        const query = request.query || {};
+        Object.entries(query).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+                value.forEach((entry) => url.searchParams.append(key, stringifyValue(entry)));
+                return;
+            }
+            url.searchParams.append(key, stringifyValue(value));
+        });
+        return url.toString();
+    }
+
+    function buildCurlCommand(request) {
+        const method = String(request.method || 'GET').toUpperCase();
+        const url = buildRequestUrl(request);
+        const commandParts = [`curl -X ${method} "${escapeForDoubleQuotes(url)}"`];
+        const ignoredHeaders = new Set(['host', 'content-length', 'connection']);
+
+        Object.entries(request.headers || {}).forEach(([key, value]) => {
+            if (ignoredHeaders.has(String(key).toLowerCase())) return;
+            const rendered = `${key}: ${stringifyValue(value)}`;
+            commandParts.push(`-H "${escapeForDoubleQuotes(rendered)}"`);
+        });
+
+        const rawBody = formatBodyRaw(request.body);
+        if (method !== 'GET' && rawBody !== '(empty)' && rawBody !== '[invalid body]') {
+            commandParts.push(`--data-raw "${escapeForDoubleQuotes(rawBody)}"`);
+        }
+
+        return commandParts.join(' ');
+    }
+
+    function renderBodyTabs() {
+        bodyViewTabs.forEach((tab) => {
+            const isActive = tab.dataset.bodyView === state.bodyView;
+            tab.classList.toggle('is-active', isActive);
+        });
+    }
+
+    function renderBody(request) {
+        if (!request) {
+            bodyPreviewEl.textContent = '{}';
+            renderBodyTabs();
+            return;
+        }
+
+        const output = state.bodyView === 'raw'
+            ? formatBodyRaw(request.body)
+            : formatBodyJson(request.body);
+        bodyPreviewEl.textContent = output;
+        renderBodyTabs();
+    }
+
+    function applyFilter() {
+        const filterText = state.filter.trim().toLowerCase();
+        if (!filterText) {
+            state.filteredIndexes = state.requests.map((_, index) => index);
+            return;
+        }
+
+        state.filteredIndexes = state.requests
+            .map((request, index) => ({ request, index }))
+            .filter(({ request }) => {
+                return request.method.toLowerCase().includes(filterText)
+                    || request.path.toLowerCase().includes(filterText)
+                    || String(request.ip).toLowerCase().includes(filterText);
+            })
+            .map(({ index }) => index);
+    }
+
+    function ensureSelection() {
+        if (!state.filteredIndexes.length) {
+            state.selectedIndex = -1;
+            return;
+        }
+
+        if (!state.filteredIndexes.includes(state.selectedIndex)) {
+            state.selectedIndex = state.filteredIndexes[0];
+        }
+    }
+
+    function renderList() {
+        requestsCountEl.textContent = `${state.filteredIndexes.length}/${state.requests.length}`;
+
+        if (!state.filteredIndexes.length) {
+            listEl.innerHTML = '<li class="request-item"><div class="request-meta">No results</div></li>';
+            return;
+        }
+
+        const html = state.filteredIndexes.map((requestIndex) => {
+            const request = state.requests[requestIndex];
+            const method = String(request.method || 'UNKNOWN').toUpperCase();
+            const selectedClass = requestIndex === state.selectedIndex ? 'active' : '';
+            return `
+                <li class="request-item ${selectedClass}" data-index="${requestIndex}">
+                    <div class="request-item-top">
+                        <div class="request-item-main">
+                            <span class="badge ${formatMethodClass(method)}">${method}</span>
+                            <span class="request-path">${escapeHtml(request.path || '/')}</span>
+                        </div>
+                        <button class="request-remove" type="button" data-remove-index="${requestIndex}" title="Remove request" aria-label="Remove request">x</button>
+                    </div>
+                    <div class="request-meta">
+                        <span>${escapeHtml(String(request.ip || '-'))}</span>
+                        <span>${escapeHtml(localDate(request.timestamp))}</span>
+                    </div>
+                </li>
+            `;
+        }).join('');
+
+        listEl.innerHTML = html;
+    }
+
+    function renderPairs(container, data) {
+        const entries = Object.entries(data || {});
+        if (!entries.length) {
+            container.innerHTML = '<li><span class="key-name">None</span><span class="key-value">-</span></li>';
+            return;
+        }
+
+        container.innerHTML = entries
+            .map(([key, value]) => {
+                return `<li><span class="key-name">${escapeHtml(key)}</span><span class="key-value">${escapeHtml(stringifyValue(value))}</span></li>`;
+            })
+            .join('');
+    }
+
+    function renderDetails() {
+        const request = getSelectedRequest();
+
+        if (!request) {
+            emptyStateEl.hidden = false;
+            overviewCardEl.hidden = true;
+            queryCardEl.hidden = true;
+            headersCardEl.hidden = true;
+            bodyCardEl.hidden = true;
+            activeMethodEl.textContent = 'Waiting';
+            detailDateEl.textContent = 'No request selected';
+            copyRequestJsonButtonEl.disabled = true;
+            copyCurlButtonEl.disabled = true;
+            renderBodyTabs();
+            return;
+        }
+
+        emptyStateEl.hidden = true;
+        overviewCardEl.hidden = false;
+        queryCardEl.hidden = false;
+        headersCardEl.hidden = false;
+        bodyCardEl.hidden = false;
+        copyRequestJsonButtonEl.disabled = false;
+        copyCurlButtonEl.disabled = false;
+
+        const methodUpper = String(request.method || 'UNKNOWN').toUpperCase();
+        activeMethodEl.textContent = methodUpper;
+        detailDateEl.textContent = localDate(request.timestamp);
+
+        metaMethodEl.textContent = methodUpper;
+        metaPathEl.textContent = request.path || '/';
+        metaIpEl.textContent = request.ip || '-';
+        metaTimestampEl.textContent = localDate(request.timestamp);
+        metaBodySizeEl.textContent = bodySize(request.body);
+
+        renderPairs(queryListEl, request.query);
+        renderPairs(headersListEl, request.headers);
+        renderBody(request);
+    }
+
+    function render() {
+        applyFilter();
+        ensureSelection();
+        renderList();
+        renderDetails();
+    }
+
+    function addRequest(newRequest) {
+        const normalized = normalizeRequest(newRequest);
+        state.requests.unshift(normalized);
+
+        if (state.requests.length > 100) {
+            state.requests = state.requests.slice(0, 100);
+        }
+
+        if (state.selectedIndex >= 0) {
+            state.selectedIndex += 1;
+        }
+
+        state.selectedIndex = 0;
+        render();
+    }
+
+    function clearRequests() {
+        state.requests = [];
+        state.selectedIndex = -1;
+        render();
+    }
+
+    function removeRequestByIndex(indexToRemove) {
+        if (!Number.isInteger(indexToRemove)) return;
+        if (indexToRemove < 0 || indexToRemove >= state.requests.length) return;
+
+        state.requests.splice(indexToRemove, 1);
+
+        if (state.selectedIndex === indexToRemove) {
+            state.selectedIndex = -1;
+        } else if (state.selectedIndex > indexToRemove) {
+            state.selectedIndex -= 1;
+        }
+
+        render();
+        showToast('Request removed');
+    }
+
+    function escapeHtml(text) {
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function showToast(message) {
+        const toastEl = document.getElementById('toast');
+        toastEl.textContent = message;
+        toastEl.classList.add('visible');
+        setTimeout(() => toastEl.classList.remove('visible'), 1600);
+    }
+
+    function copyText(text, successMessage, errorMessage) {
+        navigator.clipboard.writeText(text)
+            .then(() => showToast(successMessage))
+            .catch(() => showToast(errorMessage));
+    }
+
+    function copyEndpointUrl() {
+        const url = `${window.location.origin}/webhook`;
+        copyText(url, 'URL copied', 'Could not copy URL');
+    }
+
+    function copySelectedRequestJson() {
+        const request = getSelectedRequest();
+        if (!request) return;
+        const content = JSON.stringify(request, null, 2);
+        copyText(content, 'JSON copied', 'Could not copy JSON');
+    }
+
+    function copySelectedCurl() {
+        const request = getSelectedRequest();
+        if (!request) return;
+        const command = buildCurlCommand(request);
+        copyText(command, 'cURL copied', 'Could not copy cURL');
+    }
+
+    function bindEvents() {
+        listEl.addEventListener('click', (event) => {
+            const removeButton = event.target.closest('.request-remove[data-remove-index]');
+            if (removeButton) {
+                const indexToRemove = Number(removeButton.dataset.removeIndex);
+                removeRequestByIndex(indexToRemove);
+                return;
+            }
+
+            const item = event.target.closest('.request-item[data-index]');
+            if (!item) return;
+            state.selectedIndex = Number(item.dataset.index);
+            render();
+        });
+
+        searchInputEl.addEventListener('input', (event) => {
+            state.filter = event.target.value || '';
+            render();
+        });
+
+        document.getElementById('clearButton').addEventListener('click', () => {
+            fetch('/clear', { method: 'POST' })
+                .then((response) => response.json())
+                .then(() => {
+                    clearRequests();
+                    showToast('Requests cleared');
+                })
+                .catch((error) => {
+                    console.error('Failed to clear requests:', error);
+                    showToast('Failed to clear requests');
+                });
+        });
+
+        document.getElementById('copyUrlButton').addEventListener('click', copyEndpointUrl);
+        copyRequestJsonButtonEl.addEventListener('click', copySelectedRequestJson);
+        copyCurlButtonEl.addEventListener('click', copySelectedCurl);
+        bodyViewTabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                state.bodyView = tab.dataset.bodyView === 'raw' ? 'raw' : 'json';
+                renderBody(getSelectedRequest());
+            });
+        });
+
+        socket.on('newRequest', (request) => {
+            addRequest(request);
+        });
+
+        socket.on('clearRequests', () => {
+            clearRequests();
+        });
+    }
+
+    function bootstrap() {
+        state.requests = parseInitialRequests().map(normalizeRequest);
+        state.selectedIndex = state.requests.length ? 0 : -1;
+        bindEvents();
+        render();
+    }
+
+    bootstrap();
 </script>
 </body>
 </html>
