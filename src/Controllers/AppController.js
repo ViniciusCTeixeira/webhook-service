@@ -22,11 +22,6 @@ exports.webhook = async (req, res) => {
 
         requests.push(requestDetails);
 
-        // Limita o número de requisições armazenadas para evitar estouro de memória
-        if (requests.length > 100) {
-            requests.shift();
-        }
-
         // Emite um evento para todos os clientes conectados via WebSocket
         io.emit('newRequest', requestDetails);
 

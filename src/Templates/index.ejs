@@ -968,6 +968,10 @@
             return;
         }
 
+        if (state.selectedIndex === -1) {
+            return;
+        }
+
         if (!state.filteredIndexes.includes(state.selectedIndex)) {
             state.selectedIndex = state.filteredIndexes[0];
         }
@@ -1070,15 +1074,9 @@
         const normalized = normalizeRequest(newRequest);
         state.requests.unshift(normalized);
 
-        if (state.requests.length > 100) {
-            state.requests = state.requests.slice(0, 100);
-        }
-
         if (state.selectedIndex >= 0) {
             state.selectedIndex += 1;
         }
-
-        state.selectedIndex = 0;
         render();
     }
 

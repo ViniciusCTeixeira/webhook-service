@@ -8,7 +8,7 @@ Webhook Service is a lightweight Node.js application designed to capture and dis
 
 - **Real-time Monitoring**: The web interface updates automatically when a new request is received.
 - **Request Details**: Displays detailed information about each received request, including headers, body, method, and timestamp.
-- **In-Memory Storage**: Stores the latest 100 requests in memory to avoid excessive memory usage.
+- **In-Memory Storage**: Stores received requests in memory for real-time visualization.
 
 ## Prerequisites
 
@@ -73,7 +73,7 @@ This service uses WebSocket to provide real-time updates on the web interface. W
 You can customize the following aspects of the service:
 
 - **Port Number**: Change the port number by modifying the `port` variable in `server.js`.
-- **Request Storage Limit**: Modify the limit on stored requests by adjusting the logic in the `/webhook` route.
+- **Request Storage Behavior**: Adjust how requests are stored in the `/webhook` route (for example, if you want to reintroduce a cap).
 
 ## Contributing
 
