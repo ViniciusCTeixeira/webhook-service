@@ -478,6 +478,23 @@
             overflow-x: hidden;
         }
 
+        #bodyPreview .body-link {
+            color: #8bc5ff;
+            text-decoration: underline;
+        }
+
+        #bodyPreview .body-link:hover {
+            color: #b9dcff;
+        }
+
+        #bodyPreview .body-link-base64 {
+            color: #9de19a;
+        }
+
+        #bodyPreview .body-link-base64:hover {
+            color: #c2efc0;
+        }
+
         .empty-state {
             display: flex;
             align-items: center;
@@ -754,6 +771,7 @@
         filter: '',
         bodyView: 'json'
     };
+    const BODY_LINK_REGEX = /(https?:\/\/[^\s"'<>`]+)|(data:[^\s"'<>]+;base64,[A-Za-z0-9+/=]+)|\b(?:[A-Za-z0-9+/]{4}){10,}(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?\b/g;
 
     const listEl = document.getElementById('requestsList');
     const requestsCountEl = document.getElementById('requestsCount');
@@ -931,6 +949,45 @@
         });
     }
 
+    function isBase64LikeToken(token) {
+        const normalized = String(token || '');
+        if (normalized.length < 40) return false;
+        if (normalized.length % 4 !== 0) return false;
+        return /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(normalized);
+    }
+
+    function resolveBodyTokenHref(token) {
+        const normalized = String(token || '');
+        if (/^https?:\/\//i.test(normalized)) return normalized;
+        if (/^data:[^\s]+;base64,/i.test(normalized)) return normalized;
+        if (isBase64LikeToken(normalized)) return `data:text/plain;base64,${normalized}`;
+        return null;
+    }
+
+    function renderBodyTextWithLinks(text) {
+        const raw = String(text ?? '');
+        let html = '';
+        let cursor = 0;
+        let match = null;
+
+        BODY_LINK_REGEX.lastIndex = 0;
+        while ((match = BODY_LINK_REGEX.exec(raw)) !== null) {
+            const token = match[0];
+            const start = match.index;
+            const end = start + token.length;
+            const href = resolveBodyTokenHref(token);
+            if (!href) continue;
+
+            html += escapeHtml(raw.slice(cursor, start));
+            const base64Class = /^data:/i.test(token) || isBase64LikeToken(token) ? ' body-link-base64' : '';
+            html += `<a class="body-link${base64Class}" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(token)}</a>`;
+            cursor = end;
+        }
+
+        html += escapeHtml(raw.slice(cursor));
+        return html;
+    }
+
     function renderBody(request) {
         if (!request) {
             bodyPreviewEl.textContent = '{}';
@@ -941,7 +998,7 @@
         const output = state.bodyView === 'raw'
             ? formatBodyRaw(request.body)
             : formatBodyJson(request.body);
-        bodyPreviewEl.textContent = output;
+        bodyPreviewEl.innerHTML = renderBodyTextWithLinks(output);
         renderBodyTabs();
     }
 
