@@ -284,13 +284,47 @@
             background: #fff7f7;
         }
 
-        .request-remove:focus-visible {
-            outline: 2px solid #86b7fe;
-            outline-offset: 1px;
-            opacity: 1;
-        }
+         .request-remove:focus-visible {
+             outline: 2px solid #86b7fe;
+             outline-offset: 1px;
+             opacity: 1;
+         }
 
-        .request-meta {
+         .request-replay {
+             border: 1px solid #d6dde6;
+             border-radius: 6px;
+             background: #ffffff;
+             color: #748297;
+             width: 24px;
+             height: 24px;
+             line-height: 1;
+             font-size: 12px;
+             font-weight: 700;
+             cursor: pointer;
+             opacity: 0;
+             transition: 120ms ease;
+             flex-shrink: 0;
+             padding: 0;
+         }
+
+         .request-item:hover .request-replay,
+         .request-item.active .request-replay {
+             opacity: 1;
+         }
+
+         .request-replay:hover {
+             border-color: #b8d4a0;
+             color: #4a7c59;
+             background: #f7fdf7;
+         }
+
+         .request-replay:focus-visible {
+             outline: 2px solid #86b7fe;
+             outline-offset: 1px;
+             opacity: 1;
+         }
+
+         .request-meta {
             color: #677283;
             font-size: 12px;
             display: flex;
@@ -378,7 +412,12 @@
             background: #fff;
             border: 1px solid var(--line);
             border-radius: 10px;
-            box-shadow: var(--shadow);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
         }
 
         .card.wide {
@@ -386,113 +425,164 @@
         }
 
         .card-header {
-            background: #f8fafc;
+            background: linear-gradient(135deg, #f8fafc 0%, #f3f7fb 100%);
             border-bottom: 1px solid var(--line-soft);
-            padding: 9px 12px;
+            padding: 10px 14px;
             font-weight: 700;
             font-size: 13px;
             color: #364152;
-            letter-spacing: 0.2px;
+            letter-spacing: 0.3px;
         }
 
-        .card-header-tabs {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
+         .card-header-tabs {
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             gap: 8px;
+             flex-wrap: wrap;
+         }
 
         .card-body {
-            padding: 10px 12px;
-            font-size: 13px;
+            padding: 12px;
         }
 
         .meta-grid {
             display: grid;
-            grid-template-columns: 90px 1fr;
-            gap: 8px;
-            align-items: start;
+            grid-template-columns: 140px 1fr;
+            gap: 12px 16px;
+            margin: 0;
+            padding: 0;
         }
 
         .meta-grid dt {
-            color: var(--muted);
             font-weight: 600;
-            margin: 0;
+            color: #364152;
+            font-size: 13px;
         }
 
         .meta-grid dd {
             margin: 0;
-            color: #293445;
-            word-break: break-word;
+            color: #5c6470;
+            font-family: "JetBrains Mono", "Consolas", monospace;
+            font-size: 13px;
+            word-break: break-all;
+            background: linear-gradient(135deg, #f8fafc 0%, #f0f7ff 100%);
+            padding: 8px 10px;
+            border-radius: 6px;
+            border-left: 3px solid #1783d1;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .meta-grid dd:hover {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e8f3fb 100%);
+            border-left-color: #0d5fa3;
         }
 
         .key-value-list {
             margin: 0;
             padding: 0;
             list-style: none;
-            font-family: "JetBrains Mono", "Consolas", monospace;
-            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
         .key-value-list li {
-            padding: 6px 0;
-            border-bottom: 1px solid var(--line-soft);
             display: grid;
-            grid-template-columns: minmax(120px, 180px) 1fr;
-            gap: 10px;
+            grid-template-columns: 180px 1fr;
+            gap: 12px;
+            padding: 10px 12px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f0f7ff 100%);
+            border-radius: 6px;
+            align-items: flex-start;
+            border-left: 3px solid #1783d1;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            transition: all 120ms ease;
         }
 
-        .key-value-list li:last-child {
-            border-bottom: none;
+        .key-value-list li:nth-child(even) {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+            border-left-color: #7eb3d8;
+        }
+
+        .key-value-list li:hover {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e8f3fb 100%);
+            border-left-color: #1783d1;
+            box-shadow: 0 2px 4px rgba(23, 131, 209, 0.1);
+            transform: translateX(2px);
         }
 
         .key-name {
-            color: #566070;
+            font-weight: 600;
+            color: #1783d1;
+            font-size: 12px;
+            font-family: "JetBrains Mono", "Consolas", monospace;
+            word-break: break-all;
+            padding: 2px 0;
         }
 
         .key-value {
-            color: #1f2937;
-            word-break: break-word;
-        }
-
-        pre {
-            margin: 0;
-            background: #1f2937;
-            color: #e5edf8;
-            border-radius: 8px;
-            padding: 12px;
-            max-height: 340px;
-            overflow: auto;
+            color: #5c6470;
+            font-size: 13px;
             font-family: "JetBrains Mono", "Consolas", monospace;
-            font-size: 12px;
-            line-height: 1.45;
+            word-break: break-word;
+            padding: 2px 0;
+            line-height: 1.5;
         }
 
         #bodyPreview {
+            background: linear-gradient(135deg, #1e232b 0%, #23282f 100%);
+            color: #e8ecf0;
+            padding: 14px;
+            border-radius: 6px;
+            font-family: "JetBrains Mono", "Consolas", monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin: 0;
             white-space: pre-wrap;
-            overflow-wrap: break-word;
+            word-wrap: break-word;
             word-break: break-word;
-            max-height: 70vh;
-            overflow-y: auto;
-            overflow-x: hidden;
+            border: 1px solid #3d4450;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+            min-height: 100px;
         }
 
-        #bodyPreview .body-link {
-            color: #8bc5ff;
-            text-decoration: underline;
+        .body-link {
+            color: #56d6ff;
+            text-decoration: none;
+            border-bottom: 1px dotted #56d6ff;
+            cursor: pointer;
+            transition: 120ms ease;
         }
 
-        #bodyPreview .body-link:hover {
-            color: #b9dcff;
+        .body-link:hover {
+            color: #7ee4ff;
+            border-bottom-color: #7ee4ff;
         }
 
-        #bodyPreview .body-link-base64 {
-            color: #9de19a;
+        .body-link-base64 {
+            color: #a8d8ff;
         }
 
-        #bodyPreview .body-link-base64:hover {
-            color: #c2efc0;
+        .json-key {
+            color: #56d6ff;
+        }
+
+        .json-string {
+            color: #9cecb8;
+        }
+
+        .json-number {
+            color: #f49e71;
+        }
+
+        .json-boolean {
+            color: #f49e71;
+        }
+
+        .json-null {
+            color: #d19a94;
         }
 
         .empty-state {
@@ -661,12 +751,7 @@
     <header class="topbar">
         <div class="brand">
             <span class="brand-mark">W</span>
-            <span>Webhook.site</span>
-        </div>
-        <div class="menu-links">
-            <span>Docs & API</span>
-            <span>Custom Actions</span>
-            <span>Support</span>
+            <span>Webhook Service</span>
         </div>
     </header>
 
@@ -677,6 +762,7 @@
             <button class="btn" id="copyUrlButton" type="button">Copy</button>
         </div>
         <div>
+            <button class="btn" id="saveSessionButton" type="button">Save Session</button>
             <button class="btn btn-danger" id="clearButton" type="button">Clear Requests</button>
         </div>
     </div>
@@ -876,6 +962,28 @@
         }
     }
 
+    function syntaxHighlightJson(json) {
+        // Escape HTML
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        // Add syntax highlighting with simple regex
+        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            let cls = 'json-number';
+            if (/^"/.test(match)) {
+                if (/:$/.test(match)) {
+                    cls = 'json-key';
+                } else {
+                    cls = 'json-string';
+                }
+            } else if (/true|false/.test(match)) {
+                cls = 'json-boolean';
+            } else if (/null/.test(match)) {
+                cls = 'json-null';
+            }
+            return '<span class="' + cls + '">' + match + '</span>';
+        });
+    }
+
     function bodySize(body) {
         const text = formatBodyRaw(body);
         if (text === '(empty)' || text === '[invalid body]') return '0 B';
@@ -990,15 +1098,23 @@
 
     function renderBody(request) {
         if (!request) {
-            bodyPreviewEl.textContent = '{}';
+            bodyPreviewEl.innerHTML = '{}';
             renderBodyTabs();
             return;
         }
 
-        const output = state.bodyView === 'raw'
+        let output = state.bodyView === 'raw'
             ? formatBodyRaw(request.body)
             : formatBodyJson(request.body);
-        bodyPreviewEl.innerHTML = renderBodyTextWithLinks(output);
+
+        // Apply syntax highlighting for JSON
+        if (state.bodyView === 'json' && output !== '[body is not valid JSON]') {
+            output = syntaxHighlightJson(output);
+            bodyPreviewEl.innerHTML = output;
+        } else {
+            bodyPreviewEl.innerHTML = renderBodyTextWithLinks(output);
+        }
+
         renderBodyTabs();
     }
 
@@ -1053,7 +1169,10 @@
                             <span class="badge ${formatMethodClass(method)}">${method}</span>
                             <span class="request-path">${escapeHtml(request.path || '/')}</span>
                         </div>
-                        <button class="request-remove" type="button" data-remove-index="${requestIndex}" title="Remove request" aria-label="Remove request">x</button>
+                        <div style="display: flex; gap: 4px;">
+                            <button class="request-replay" type="button" data-replay-index="${requestIndex}" title="Replay request" aria-label="Replay request">▶</button>
+                            <button class="request-remove" type="button" data-remove-index="${requestIndex}" title="Remove request" aria-label="Remove request">x</button>
+                        </div>
                     </div>
                     <div class="request-meta">
                         <span>${escapeHtml(String(request.ip || '-'))}</span>
@@ -1209,6 +1328,21 @@
                 return;
             }
 
+            const replayButton = event.target.closest('.request-replay[data-replay-index]');
+            if (replayButton) {
+                const indexToReplay = Number(replayButton.dataset.replayIndex);
+                fetch(`/replay/${indexToReplay}`, { method: 'POST' })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        showToast(data.msg || 'Request replayed');
+                    })
+                    .catch((error) => {
+                        console.error('Failed to replay request:', error);
+                        showToast('Failed to replay request');
+                    });
+                return;
+            }
+
             const item = event.target.closest('.request-item[data-index]');
             if (!item) return;
             state.selectedIndex = Number(item.dataset.index);
@@ -1241,6 +1375,17 @@
                 state.bodyView = tab.dataset.bodyView === 'raw' ? 'raw' : 'json';
                 renderBody(getSelectedRequest());
             });
+        });
+
+        document.getElementById('saveSessionButton').addEventListener('click', () => {
+            const dataStr = JSON.stringify(state.requests, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'webhook-session.json';
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            showToast('Session saved');
         });
 
         socket.on('newRequest', (request) => {

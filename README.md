@@ -8,7 +8,11 @@ Webhook Service is a lightweight Node.js application designed to capture and dis
 
 - **Real-time Monitoring**: The web interface updates automatically when a new request is received.
 - **Request Details**: Displays detailed information about each received request, including headers, body, method, and timestamp.
-- **In-Memory Storage**: Stores received requests in memory for real-time visualization.
+- **In-Memory Storage with Persistence**: Stores up to 500 requests in memory, with automatic saving to file for session continuity.
+- **Replay Requests**: Allows replaying captured requests directly from the UI.
+- **Export and Import**: Save sessions as JSON files for sharing or later analysis.
+- **Filtering and Search**: Filter requests by method, path, or IP address.
+- **Copy Tools**: Easily copy request details as JSON or cURL commands.
 
 ## Prerequisites
 

@@ -3,6 +3,8 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const ip = require("ip");
+const fs = require('fs');
+const path = require('path');
 const appConfig = require('./configs/AppConfig');
 const {join} = require("node:path");
 
@@ -16,7 +18,32 @@ global.logs = require('./configs/LogsConfig');
 global.tools = require('./src/Helpers/ToolsHelper');
 global.WWW_ROOT = __dirname;
 
-global.requests = []
+const requestsFile = path.join(__dirname, 'requests.json');
+
+// Carrega requests do arquivo se existir
+try {
+    if (fs.existsSync(requestsFile)) {
+        global.requests = JSON.parse(fs.readFileSync(requestsFile, 'utf8'));
+        logs.info(`Carregadas ${global.requests.length} requisições do arquivo.`);
+    } else {
+        global.requests = [];
+    }
+} catch (e) {
+    logs.error('Erro ao carregar requests do arquivo:', e.message);
+    global.requests = [];
+}
+
+// Função para salvar requests no arquivo
+global.saveRequests = function() {
+    try {
+        fs.writeFileSync(requestsFile, JSON.stringify(global.requests, null, 2));
+    } catch (e) {
+        logs.error('Erro ao salvar requests:', e.message);
+    }
+}
+
+// Limite de 500 requests
+const MAX_REQUESTS = 500;
 
 //Set extra configs
 appConfig.setup();
