@@ -1,59 +1,108 @@
-const parser = require("body-parser");
-const express = require('express');
-const {join} = require("node:path");
+import express from "express";
+import { EventEmitter } from "node:events";
+import path from "node:path";
+import fs from "node:fs";
+import { readRuntimeConfig, validateRuntimeConfig } from "./RuntimeConfig.js";
+import { logger } from "../src/Tools/LogTool.js";
 
 class AppConfig {
+  static port() {
+    return readRuntimeConfig().app.port;
+  }
 
-    static setup(){
-        this.setBodyParser();
-        this.setMaxListeners();
-        this.validateEnv();
-        this.setAssets()
+  static nodeEnv() {
+    return readRuntimeConfig().app.nodeEnv;
+  }
 
-        app.set('view engine', 'ejs');
-        app.set('views', join(WWW_ROOT, 'src', 'Templates'));
+  static publicUrl() {
+    return readRuntimeConfig().app.publicUrl;
+  }
+
+  static setBodyParser(app) {
+    const maxPayload = `${readRuntimeConfig().app.maxPayloadMb}mb`;
+
+    // Capture raw body for signature verification and exact payload replay
+    const rawCapture = (req, _res, buf) => {
+      req.rawBody = buf ? buf.toString("utf8") : "";
+    };
+
+    app.use(express.json({ limit: maxPayload, verify: rawCapture }));
+    app.use(express.urlencoded({ limit: maxPayload, extended: true, verify: rawCapture }));
+    app.use(express.text({ limit: maxPayload, type: ["text/*", "application/xml", "application/javascript"], verify: rawCapture }));
+    app.use(express.raw({ limit: maxPayload, type: ["application/octet-stream", "multipart/form-data"], verify: rawCapture }));
+  }
+
+  static setMaxListeners() {
+    process.setMaxListeners(200);
+    EventEmitter.defaultMaxListeners = 200;
+  }
+
+  static setStaticDashboard(app) {
+    const { rootDir } = readRuntimeConfig();
+    const dashboardPublicPath = path.join(rootDir, "public", "dashboard");
+
+    if (fs.existsSync(dashboardPublicPath)) {
+      app.use("/dashboard", express.static(dashboardPublicPath));
+      app.use(express.static(dashboardPublicPath)); // also serve root assets
     }
 
-    static validateEnv(){
-        if (!process.env.NODE_ENV) {
-            process.env.NODE_ENV = 'PRODUCTION';
-        }
-
-        if (!process.env.PORT) {
-            process.env.PORT = 3000;
-        }
+    // Serve public directory
+    const publicPath = path.join(rootDir, "public");
+    if (fs.existsSync(publicPath)) {
+      app.use(express.static(publicPath));
     }
+  }
 
-    //- Aplica limites maiores de parseamentos nos request e responses
-    static setBodyParser(){
-        try {
-            app.use(parser.json({limit : '100mb', extended : true}));
-            app.use(parser.urlencoded({limit : '100mb', extended : true}));
-        } catch (e) {
-            logs.error(e.message);
-        }
+  static setSpaFallback(app) {
+    const { rootDir } = readRuntimeConfig();
+    const dashboardIndex = path.join(rootDir, "public", "dashboard", "index.html");
+
+    app.use((req, res, next) => {
+      // Don't intercept API routes or Webhook ingestion routes
+      if (
+        req.path.startsWith("/api/") ||
+        req.path.startsWith("/w/") ||
+        req.path === "/webhook" ||
+        req.path === "/health" ||
+        req.path === "/ready"
+      ) {
+        return next();
+      }
+
+      if (fs.existsSync(dashboardIndex) && (req.method === "GET" || req.method === "HEAD")) {
+        return res.sendFile(dashboardIndex);
+      }
+      next();
+    });
+  }
+
+  static setErrorHandlers(app) {
+    app.use((req, res, next) => {
+      if (res.headersSent) return next();
+      res.status(404).json({ success: false, message: "Rota não encontrada." });
+    });
+
+    app.use((error, req, res, next) => {
+      if (res.headersSent) return next(error);
+      if (error?.type === "entity.too.large") {
+        return res.status(413).json({ success: false, message: "Payload acima do limite permitido." });
+      }
+      if (error?.type === "entity.parse.failed") {
+        return res.status(400).json({ success: false, message: "JSON inválido no corpo da requisição." });
+      }
+      logger.error("Internal Server Error:", error?.message || error);
+      return res.status(500).json({ success: false, message: "Erro interno no servidor." });
+    });
+  }
+
+  static validateEnv() {
+    try {
+      validateRuntimeConfig();
+    } catch (e) {
+      logger.error("Falha ao validar variáveis de ambiente:", e.message);
+      process.exit(1);
     }
-
-    //- Aplica um limite maior nos listerners, evita problemas com muitas instâncias
-    static setMaxListeners(){
-        try {
-            process.setMaxListeners(500);
-            require('events').EventEmitter.defaultMaxListeners = 500;
-        } catch (e) {
-            logs.error(e.message);
-        }
-    }
-
-    static setAssets(){
-        // jQuery em /js/jquery
-        app.use('/js/jquery', express.static(WWW_ROOT + '/node_modules/jquery/dist'));
-
-        // Bootstrap JS em /js/bootstrap
-        app.use('/js/bootstrap', express.static(WWW_ROOT + '/node_modules/bootstrap/dist/js'));
-
-        // Bootstrap CSS em /css/bootstrap
-        app.use('/css/bootstrap', express.static(WWW_ROOT + '/node_modules/bootstrap/dist/css'));
-    }
+  }
 }
 
-module.exports = AppConfig;
+export default AppConfig;

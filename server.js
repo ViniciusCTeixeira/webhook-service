@@ -1,84 +1,105 @@
-require("dotenv").config();
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const ip = require("ip");
-const fs = require('fs');
-const path = require('path');
-const appConfig = require('./configs/AppConfig');
-const {join} = require("node:path");
+import express from "express";
+import http from "node:http";
+import ip from "ip";
+import AppConfig from "./configs/AppConfig.js";
+import CorsConfig from "./configs/CorsConfig.js";
+import { initDatabase, closeDatabase } from "./src/Tools/DatabaseTool.js";
+import { runMigrations } from "./src/Tools/MigrationTool.js";
+import { logger } from "./src/Tools/LogTool.js";
+import { initSocket } from "./src/Tools/SocketTool.js";
+import { SessionsResource } from "./src/Resources/SessionsResource.js";
+import { registerRoutes } from "./src/Routes/index.js";
+import { getLiveness, getReadiness } from "./src/Tools/HealthTool.js";
 
-// Cria o servidor HTTP e o integra com o socket.io
-global.app = express();
-global.server = http.createServer(app);
-global.io = new Server(server);
+// Global app state
+const app = express();
+const server = http.createServer(app);
 
-//Set tools
-global.logs = require('./configs/LogsConfig');
-global.tools = require('./src/Helpers/ToolsHelper');
-global.WWW_ROOT = __dirname;
+// 1. Validate environment
+AppConfig.validateEnv();
 
-const requestsFile = path.join(__dirname, 'requests.json');
-
-// Carrega requests do arquivo se existir
+// 2. Initialize database and run migrations
 try {
-    if (fs.existsSync(requestsFile)) {
-        global.requests = JSON.parse(fs.readFileSync(requestsFile, 'utf8'));
-        logs.info(`Carregadas ${global.requests.length} requisições do arquivo.`);
-    } else {
-        global.requests = [];
-    }
+  initDatabase();
+  const applied = runMigrations();
+  if (applied.length > 0) {
+    logger.info(`Migrações executadas com sucesso: ${applied.join(", ")}`);
+  }
+  // Ensure default session exists
+  SessionsResource.ensureDefaultSession();
 } catch (e) {
-    logs.error('Erro ao carregar requests do arquivo:', e.message);
-    global.requests = [];
+  logger.error("Falha ao inicializar o banco de dados:", e.message);
+  process.exit(1);
 }
 
-// Função para salvar requests no arquivo
-global.saveRequests = function() {
-    try {
-        fs.writeFileSync(requestsFile, JSON.stringify(global.requests, null, 2));
-    } catch (e) {
-        logs.error('Erro ao salvar requests:', e.message);
-    }
-}
+// 3. Middlewares
+AppConfig.setMaxListeners();
+app.use(CorsConfig.getMiddleware());
+AppConfig.setBodyParser(app);
 
-// Limite de 500 requests
-const MAX_REQUESTS = 500;
+// 4. Socket.IO initialization
+const io = initSocket(server);
 
-//Set extra configs
-appConfig.setup();
-
-//Set port listen
-server.listen(process.env.PORT, async () => {
-    logs.info(`Aplicação iniciada na porta ${process.env.PORT}`);
-    logs.info(`Servidor rodando em ${process.env.NODE_ENV}`);
-    logs.info(`Servidor rodando em ${ip.address()}`);
+// 5. Health & Readiness Probes
+app.get("/health", (_req, res) => {
+  const result = getLiveness();
+  res.status(result.statusCode).json(result.body);
 });
 
-//Load routes
-require('./src/Routes/index')();
-
-// Tratamento para encerramento do sistema
-process.on('beforeExit', code => {
-    logs.info('beforeExit | Process will exit with code: %i ', code);
-})
-
-process.on('exit', code => {
-    logs.info('exit | call to process exit: %i ', code);
+app.get("/ready", (_req, res) => {
+  const result = getReadiness();
+  res.status(result.statusCode).json(result.body);
 });
 
-process.on('SIGTERM', signal => {
-    logs.info(`SIGTERM | Process ${process.pid} received a SIGTERM signal`);
-    process.exit(2)
-})
+// 6. Static files for Dashboard UI
+AppConfig.setStaticDashboard(app);
 
-process.on('SIGINT', signal => {
-    logs.info(`SIGINT | Process ${process.pid} has been interrupted`);
-    process.exit(3)
-})
+// 7. Register domain and webhook routes
+registerRoutes(app);
 
-process.on('uncaughtExceptionMonitor', (err, origin) => {
-    logs.error('uncaughtExceptionMonitor -> err: %s', err);
-    logs.error('uncaughtExceptionMonitor -> origin: %i', origin);
-    process.exit(4)
+// 8. SPA Fallback for Dashboard UI
+AppConfig.setSpaFallback(app);
+
+// 9. Error Handling
+AppConfig.setErrorHandlers(app);
+
+// 10. Start HTTP and Socket server
+const port = AppConfig.port();
+server.listen(port, () => {
+  logger.info(`====================================================`);
+  logger.info(` Webhook Service v3.0 iniciado na porta ${port}`);
+  logger.info(` Ambiente: ${AppConfig.nodeEnv()}`);
+  logger.info(` Acesso Local:     http://localhost:${port}`);
+  logger.info(` Acesso na Rede:   http://${ip.address()}:${port}`);
+  logger.info(` Webhook Default:  http://localhost:${port}/w/default`);
+  logger.info(`====================================================`);
 });
+
+// 11. Graceful Shutdown
+let isShuttingDown = false;
+const shutdown = (signal) => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  logger.info(`Sinal ${signal} recebido. Encerrando conexões com segurança...`);
+
+  if (io) {
+    io.close();
+  }
+
+  server.close(() => {
+    logger.info("Servidor HTTP encerrado.");
+    closeDatabase();
+    logger.info("Banco de dados SQLite fechado. Processo concluído.");
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    logger.error("Encerramento forçado por timeout de 5 segundos.");
+    process.exit(1);
+  }, 5000).unref();
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+export { app, server, io };

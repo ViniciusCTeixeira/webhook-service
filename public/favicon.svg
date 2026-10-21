@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="whGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="50%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    <linearGradient id="nodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect x="4" y="4" width="92" height="92" rx="24" fill="#090d16" stroke="url(#whGrad)" stroke-width="3" />
+
+  <!-- Signal Waves (Incoming Webhook pulse) -->
+  <path d="M 22 35 A 18 18 0 0 1 22 65" stroke="url(#nodeGrad)" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.6" />
+  <path d="M 15 26 A 30 30 0 0 1 15 74" stroke="url(#nodeGrad)" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.9" />
+
+  <!-- Branching Routes -->
+  <path d="M 44 50 L 62 34 L 72 34" stroke="url(#whGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  <path d="M 44 50 L 62 66 L 72 66" stroke="url(#whGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+  <!-- Central Processing Core -->
+  <circle cx="44" cy="50" r="10" fill="#0f172a" stroke="url(#nodeGrad)" stroke-width="3.5" />
+  <circle cx="44" cy="50" r="4.5" fill="#38bdf8" />
+
+  <!-- Outgoing Destination Endpoints -->
+  <circle cx="74" cy="34" r="6" fill="#06b6d4" />
+  <circle cx="74" cy="66" r="6" fill="#10b981" />
+</svg>

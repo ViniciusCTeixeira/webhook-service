@@ -1,5 +1,14 @@
+node_modules/
+dashboard/node_modules/
+dashboard/dist/
+.env
+*.log
+logs/
+data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+requests.json
+.DS_Store
 /.idea
-/node_modules
-/logs
-/requests.json
 /.yarn
