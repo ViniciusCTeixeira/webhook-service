@@ -3,6 +3,7 @@ import { Modal } from "./Modal";
 import { Send, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import { Badge, StatusBadge, MethodBadge } from "./Badge";
 import { useApp } from "../context/AppContext";
+import { formatTimestamp } from "../utils/dateTime";
 
 export const ReplayModal = ({ isOpen, onClose, request }) => {
   const { baseUrl } = useApp();
@@ -117,7 +118,7 @@ export const ReplayModal = ({ isOpen, onClose, request }) => {
 
         <div className="flex items-center justify-between pt-2">
           <span className="text-xs text-slate-500">
-            Requisição original #{request.id} ({request.created_at})
+            Requisição original #{request.id} ({formatTimestamp(request.created_at)})
           </span>
           <button
             type="submit"

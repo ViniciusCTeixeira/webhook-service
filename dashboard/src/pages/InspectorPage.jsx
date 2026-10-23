@@ -21,6 +21,7 @@ import { useApp } from "../context/AppContext";
 import { MethodBadge, StatusBadge } from "../components/Badge";
 import { ReplayModal } from "../components/ReplayModal";
 import { QrCodeModal } from "../components/QrCodeModal";
+import { formatTimestamp } from "../utils/dateTime";
 
 export const InspectorPage = () => {
   const { activeSession, sessions, setActiveSession, baseUrl, socket, showToast } = useApp();
@@ -321,7 +322,7 @@ export const InspectorPage = () => {
 
                     <div className="text-right shrink-0">
                       <span className="text-[10px] text-slate-500 font-mono">
-                        {req.created_at?.split(" ")[1] || req.created_at}
+                        {formatTimestamp(req.created_at)}
                       </span>
                     </div>
                   </div>
@@ -384,7 +385,7 @@ export const InspectorPage = () => {
                   <span className="text-slate-500">Duração:</span> {selectedRequest.duration_ms}ms
                 </div>
                 <div>
-                  <span className="text-slate-500">Recebido em:</span> {selectedRequest.created_at}
+                  <span className="text-slate-500">Recebido em:</span> {formatTimestamp(selectedRequest.created_at)}
                 </div>
               </div>
 

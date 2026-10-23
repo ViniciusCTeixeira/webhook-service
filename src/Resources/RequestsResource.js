@@ -94,8 +94,8 @@ export class RequestsResource {
       INSERT INTO requests (
         session_id, session_token, method, path, query_params,
         headers, body, raw_body, client_ip, content_type,
-        size_bytes, duration_ms, response_status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        size_bytes, duration_ms, response_status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%d %H:%M:%f', 'now'))
     `);
 
     const result = stmt.run(
